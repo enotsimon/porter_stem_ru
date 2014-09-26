@@ -9,7 +9,7 @@
 -export([test/0]). % debug
 
 test() ->
-	{ok, Data} = file:read_file("/home/superjob/erl/lang/deps/porter_stem_ru/test_data"),
+	{ok, Data} = file:read_file("deps/porter_stem_ru/test_data"),
 	Words = [binary:split(D, <<",">>, [global]) || D <- binary:split(Data, <<"\n">>, [global])],
 	TFun = fun(In, MustBe) ->
 		Res = stem(In),
@@ -225,8 +225,8 @@ step2([1080 | Rest]) -> Rest;
 step2(W) -> W.
 
 % DERIVATIONAL ending "ост", "ость" => ""  the entire ending must lie in R2
-step3([1086, 1089, 1090, 1100 | Rest] = All) -> remove_if_lies_in_r2_region(Rest, All);
-step3([1086, 1089, 1090 | Rest] = All)       -> remove_if_lies_in_r2_region(Rest, All);
+step3([1100, 1090, 1089, 1086 | Rest] = All) -> remove_if_lies_in_r2_region(Rest, All);
+step3([1090, 1089, 1086 | Rest] = All)       -> remove_if_lies_in_r2_region(Rest, All);
 step3(W) -> W.
 
 % Cons+ Vowel+ Cons in normal order
@@ -238,8 +238,8 @@ remove_if_lies_in_r2_region(R, A) ->
 	end.
 
 % SUPERLATIVE ейш, ейше -> ""
-step4([1077, 1096, 1081, 1077 | Rest]) -> step4(Rest); % "ейше"" -> ""
-step4([1096, 1081, 1077 | Rest]) -> step4(Rest); % "ейш"" -> ""
+step4([1077, 1096, 1081, 1077 | Rest]) -> step4(Rest); % "ейше" -> ""
+step4([1096, 1081, 1077 | Rest]) -> step4(Rest); % "ейш" -> ""
 step4([1085, 1085 | Rest]) -> [1085 | Rest]; % "нн" -> "н" !!!
 step4([1100 | Rest]) -> Rest; % "ь" -> ""
 step4(W) -> W.
