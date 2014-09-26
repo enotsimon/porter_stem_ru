@@ -1,0 +1,8 @@
+{application, porter_stem_ru,
+	[
+		{description, "porter stemmer from russian language"},
+		{vsn, "0.1"},
+		{registered, []},
+		{applications, [unistring, kernel, stdlib]}
+	]
+}.
