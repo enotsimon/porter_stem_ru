@@ -4,23 +4,13 @@
 %%		http://snowball.tartarus.org/algorithms/russian/stemmer.html
 %%
 -module(porter_stem_ru).
+-include_lib("eunit/include/eunit.hrl").
 -export([stem/1, lstem/1]).
--export([rev_and_number/1, rev_and_number_many/1]). % debug
--export([test/0]). % debug
+-export([codes_reversed/1, codes_reversed_list/1]). % debug
 
-test() ->
-	{ok, Data} = file:read_file("deps/porter_stem_ru/test_data"),
-	Words = [binary:split(D, <<",">>, [global]) || D <- binary:split(Data, <<"\n">>, [global])],
-	TFun = fun(In, MustBe) ->
-		Res = stem(In),
-		Ok = case Res == unicode:characters_to_list(MustBe) of true -> "OK"; false -> "FAIL" end,
-		io:format("TEST ~p:  ~ts result: ~ts must_be: ~ts\n", [Ok, In, Res, MustBe]), timer:sleep(5)
-	end,
-	[TFun(In, Out) || [In, Out] <- Words],
-	ok.
 
-stem(Word) when is_binary(Word) -> sstem(Word); %unicode:characters_to_binary(sstem(Word));
-stem(Word) when is_list(Word) -> sstem(Word); %binary_to_list(unicode:characters_to_binary(sstem(Word)));
+stem(Word) when is_binary(Word) -> unicode:characters_to_binary(sstem(Word));
+stem(Word) when is_list(Word) -> sstem(Word);
 stem(Word) -> {error, wrong_args, Word}.
 
 sstem(Word) -> lstem(replace_yo_with_ie(unistring:to_lower(unicode:characters_to_list(Word)))).
@@ -34,15 +24,11 @@ replace_yo_with_ie([V | Rest], Acc) -> replace_yo_with_ie(Rest, [V | Acc]).
 % AND word MUST be result of unicode:characters_to_list(Word)
 % AND "ё" must be replaced with "е"
 lstem(Word) when is_list(Word) ->
-	%% cache??? no cache for now
-	%io:format("WORD: ~ts   ~w\n", [Word, Word]),
 	case get_rv_part(Word, []) of
 		{Start, []} ->
-			%io:format("NO V R: ~ts   ~w\n", [Start, Start]),
 			Start;
 		{Start, RV} ->
 			P = lists:reverse(step4(step3(step2(step1(lists:reverse(RV)))))),
-			%io:format("YES V R: {~ts, ~ts} {~w, ~w} result: ~ts\n", [Start, P, Start, P, Start++P]),
 			Start++P
 	end.
 
@@ -243,10 +229,10 @@ step4(W) -> W.
 
 
 %% DEBUG. you put part of string like "ивш" and gets utf8 codes in REVERSE order like [1080, 1074, 1096]
-rev_and_number_many(Words) ->
-	[rev_and_number(Word) || Word <- Words].
+codes_reversed_list(Words) ->
+	[codes_reversed(Word) || Word <- Words].
 
-rev_and_number(Word) ->
+codes_reversed(Word) ->
 	Chars = unicode:characters_to_list(Word),
 	[io:format("~p, ", [V]) || V <- lists:reverse(Chars)],
 	io:format("\n").
