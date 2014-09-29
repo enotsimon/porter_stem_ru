@@ -8,6 +8,7 @@
 -export([stem/1, lstem/1]).
 -export([codes_reversed/1, codes_reversed_list/1]). % debug
 
+-define(VOWELS, [1072,1077,1105,1080,1086,1091,1099,1101,1102,1103]). % all russian vowels, including "ё"
 
 stem(Word) when is_binary(Word) -> unicode:characters_to_binary(sstem(Word));
 stem(Word) when is_list(Word) -> sstem(Word);
@@ -211,17 +212,17 @@ step2([1080 | Rest]) -> Rest;
 step2(W) -> W.
 
 % DERIVATIONAL ending "ост", "ость" => ""  the entire ending must lie in R2
-step3([1100, 1090, 1089, 1086 | Rest] = All) -> remove_if_lies_in_r2_region(Rest, All);
-step3([1090, 1089, 1086 | Rest] = All)       -> remove_if_lies_in_r2_region(Rest, All);
+step3([1100, 1090, 1089, 1086 | Rest] = All) -> case check_in_r2(Rest, 0) of true -> Rest; false -> All end;
+step3([1090, 1089, 1086 | Rest] = All)       -> case check_in_r2(Rest, 0) of true -> Rest; false -> All end;
 step3(W) -> W.
 
 % Cons+ Vowel+ Cons in normal order
-%% TEMP. not the best way
-remove_if_lies_in_r2_region(R, A) ->
-	case re:run(unicode:characters_to_binary(R), "[^аеёиоуыэюя][аеёиоуыэюя]+[^аеёиоуыэюя]", [{capture, none}]) of
-		match -> R;
-		nomatch -> A
-	end.
+% awful code replacing re:run(R, "[^аеёиоуыэюя][аеёиоуыэюя]+[^аеёиоуыэюя]") because i met problems with unicode in re
+% module and couldn't solve them (example re:run("нж", "[^аеёиоуыэюя][аеёиоуыэюя]+[^аеёиоуыэюя]") == match)
+check_in_r2([], _) -> false;
+check_in_r2([H|T], 0) -> case lists:member(H, ?VOWELS) of false -> check_in_r2(T, 1); true -> check_in_r2(T, 0) end;
+check_in_r2([H|T], 1) -> case lists:member(H, ?VOWELS) of false -> check_in_r2(T, 1); true -> check_in_r2(T, 2) end;
+check_in_r2([H|T], 2) -> case lists:member(H, ?VOWELS) of false -> check_in_r2(T, 2); true -> true end.
 
 % SUPERLATIVE ейш, ейше -> ""
 step4([1077, 1096, 1081, 1077 | Rest]) -> step4(Rest); % "ейше" -> ""
