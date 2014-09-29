@@ -129,5 +129,5 @@ data_set() -> [
 %% TODO: make tests results readable some way -- {expected,[1087,1072,1076]} to {expected,["пад"]}
 first_test_() ->
 	{inparallel,
-		[?_assertEqual(porter_stem_ru:stem(In), unicode:characters_to_list(Out)) || {In, Out} <- data_set()]
+		[?_assertEqual(unicode:characters_to_list(Out), porter_stem_ru:stem(In)) || {In, Out} <- data_set()]
 	}.
